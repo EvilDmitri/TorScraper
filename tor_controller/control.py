@@ -20,7 +20,7 @@ class Tor:
     def _auth(self):
         try:
             if self._auth_method == None:
-                # TODO: get password froom cli
+                # TODO: get password from cli
                 password = '"password"'
                 auth_string = "authenticate " + password + " \r\n"
                 self._socket.send(auth_string.encode("UTF-8"))

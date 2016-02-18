@@ -48,7 +48,6 @@ def get_from_fingerprint(relay_hash):
 
 def ip_to_country(ip):
     answer = tor.getinfo('ip-to-country/'+ip).split('\r\n')[0]
-    print tor.getinfo('ip-to-country/'+ip).split('\r\n')[0]
     return answer.split('=')[1]
 
 
@@ -88,7 +87,7 @@ def get_data():
 
     write(data)
 
-    close(relay_name)
+    close(circuit_number)
 
 if __name__ == '__main__':
     clear_old_circuits()
