@@ -39,25 +39,35 @@ class Tor:
     def _send(self, data):
         try:
             self._socket.send(data.encode("UTF-8"))
-            return self._socket.recv(1024).decode("UTF-8").rstrip()
+            return self._socket.recv(102400).decode("UTF-8").rstrip()
         except socket.error as err:
             raise ConnectionError(err.message)
 
     def getinfo(self, option):
-        status = self._send("getinfo %s\r\n" % option)
-        time.sleep(0.2)
+        status = self._send("GETINFO %s\r\n" % option)
+        # time.sleep(0.5)
         return status
 
     def closecircuit(self, number):
-        status = self._send("closecircuit %s\r\n" % number)
+        status = self._send("CLOSECIRCUIT %s\r\n" % number)
         # if code(status) != "250":
         #     raise TorError(status)
         return status
 
     def extendcircuit(self, number):
-        status = self._send("extendcircuit %s\r\n" % number)
+        status = self._send("EXTENDCIRCUIT %s\r\n" % number)
+        time.sleep(2)  # circuit should be established
         if code(status) != "250":
             raise TorError(status)
         return status
 
+    # Configure
+    def setconf(self, option, value):
+        status = self._send("SETCONF %s=%s\r\n" % (option, value))
+        if code(status) != "250":
+            raise TorError(status)
 
+    def saveconf(self):
+        status = self._send("SAVECONF\r\n")
+        if code(status) != "250":
+            raise TorError(status)
