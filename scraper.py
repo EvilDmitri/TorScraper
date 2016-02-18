@@ -31,39 +31,67 @@ def close(number):
 
 def write(data_str):
     with open('data.txt', 'a') as data_file:
-        data_file.write(data_str)
+        data_file.write(data_str+'\n')
+
+
+def get_from_fingerprint(relay_hash):
+    # print 'hash', relay_hash
+    router = tor.getinfo('dir/server/fp/' + relay_hash).split('\r\n')
+    for line in router:
+        # print line
+        if line.startswith('router '):
+
+            ip = line.split()[2]
+            return ip
+    return ''
+
+
+def ip_to_country(ip):
+    answer = tor.getinfo('ip-to-country/'+ip).split('\r\n')[0]
+    print tor.getinfo('ip-to-country/'+ip).split('\r\n')[0]
+    return answer.split('=')[1]
 
 
 def get_data():
     data = ''
-    # tor.extendcircuit('0')
-    # time.sleep(0.8)  # circuit should be established
-    # data += str(datetime.datetime.now()).split('.')[0] + ' '
+    tor.extendcircuit('0')
+    time.sleep(0.8)  # circuit should be established
+    data += str(datetime.datetime.now()).split('.')[0] + ' '
+
     status = tor.getinfo("circuit-status")
     # print status
     circuit_number = status.split(' ')[0]
     circuit_hashes = status.split(' ')[2].split(',')
-    print circuit_hashes
-    for hash in circuit_hashes:
-        relay_name = hash.split('~')[1]
 
+    # print circuit_hashes
+    for hash in circuit_hashes:
+        ip = ''
+        relay_name = hash.split('~')[1]
+        relay_hash = hash.split('~')[0]
         if relay_name != 'Unnamed':
-            router = tor.getinfo('version desc/name/' + relay_name).split('\r\n')[2]
-            print router
-            if router.startswith('router'):
-                ip = router.split()[2]
-                print ip, '\n'
-            else:
-                relay_hash = hash.split('~')[0]
-                relay_hash = relay_hash[1:]
-                router = tor.getinfo('dir/server/fp/' + relay_hash).split('\r\n')[1]
-                # print router
-                if router.startswith('router'):
-                    ip = router.split()[2]
-                    print ip, '\n'
+            # print tor.getinfo('version desc/name/' + relay_name)
+            router = tor.getinfo('version desc/name/' + relay_name).split('\r\n')
+            # print router
+            for line in router:
+                if line.startswith('router'):
+                    ip = line.split()[2]
+            if ip == '':
+                ip = get_from_fingerprint(relay_hash[1:])
+        else:
+            ip = get_from_fingerprint(relay_hash[1:])
+
+        country = ip_to_country(ip)
+        data += 'ip:'+country+','
+
+    if data.endswith(','):
+        data = data[:-1]
+
+    write(data)
+
+    close(relay_name)
 
 if __name__ == '__main__':
-    # clear_old_circuits()
+    clear_old_circuits()
     get_data()
 
     tor.close()

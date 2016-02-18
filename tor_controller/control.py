@@ -1,4 +1,5 @@
 import socket
+import time
 from .excepts import *
 from .utils import *
 
@@ -44,6 +45,7 @@ class Tor:
 
     def getinfo(self, option):
         status = self._send("getinfo %s\r\n" % option)
+        time.sleep(0.2)
         return status
 
     def closecircuit(self, number):
